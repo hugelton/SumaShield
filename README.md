@@ -18,17 +18,18 @@
 
 ## Hardware
 
-**SumaShield Platform:**
-- Raspberry Pi Pico (RP2040)
-- I2S DAC (PCM5102, UDA1334)
+**SumaShield Platform (Shield Compatible with RP2040 Boards):**
+- Raspberry Pi Pico / Pico 2 / Clone boards
+- **On-board I2S DAC:** PT8211 (integrated on shield)
 - OLED SSD1306 (72x40)
-- 8-key matrix, rotary encoder, 2x buttons, 2x pots
+- **Key Switches:** Cherry MX compatible (8 keys)
+- Rotary encoder, 2x buttons, 2x pots
 
 **Pin Configuration:**
 ```
-I2S Audio:    GPIO 19 (DATA), GPIO 20 (BCLK)
+I2S Audio:    GPIO 19 (DATA), GPIO 20 (BCLK) - PT8211 on shield
 I2C Display:  GPIO 4 (SDA), GPIO 5 (SCL)
-Key Matrix:   GPIO 12-15 (COL), GPIO 16-17 (ROW)
+Key Matrix:   GPIO 12-15 (COL), GPIO 16-17 (ROW) - Cherry MX sockets
 Rotary:       GPIO 9 (SW), GPIO 10 (CLK), GPIO 11 (DT)
 Buttons:      GPIO 7 (A), GPIO 8 (B)
 ADC:          GPIO 26, GPIO 27
