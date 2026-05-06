@@ -37,7 +37,7 @@ SumaShield is a stackable PCB shield designed for Raspberry Pi Pico and Pico 2. 
 | OLED SSD1306 | 72x40 pixels (Option A - Recommended) | Less visual noise | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
 | OLED SSD1306 | 0.96" 128x64 pixels (Option B) | May have visual noise | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
 | **Controls** | | | |
-| Cherry MX Switches | Mechanical key switches | 8x required, user-installed | [Cherry MX](https://www.cherrymx.de/en/products) |
+| Cherry MX Switches | Mechanical key switches | 8x required | [Cherry MX](https://www.cherrymx.de/en/products) |
 | Rotary Encoder | EC11 series | With push button | [EC11 Datasheet](https://datasheet.lcsc.com/lcsc/1811141824_Alps-Alpine-Electric-EC11E15244A3_C87793.pdf) |
 | Push Buttons | 6x6mm tactile | 2x required | [TL3303 Datasheet](https://www.e-switch.com/system/asset/product_line/data_sheet/20/TL3303.pdf) |
 | Potentiometers | 10kΩ linear | 2x required | - |

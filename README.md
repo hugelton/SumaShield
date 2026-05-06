@@ -60,7 +60,7 @@ SumaShield is a custom PCB that stacks onto Raspberry Pi Pico/Pico 2:
 - Raspberry Pi Pico (RP2040) or Pico 2 (RP2350, A4+ stepping recommended)
 - PT8211 I2S DAC (on-board)
 - OLED SSD1306 display (72x40 recommended)
-- 8x Cherry MX switches (user-installed)
+- 8x Cherry MX switches
 - 3.5mm TRS jack (MJ-8435 type)
 - Rotary encoder, 2x push buttons, 2x potentiometers
 
