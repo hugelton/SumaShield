@@ -25,6 +25,8 @@ Under the following terms:
 **Creative Commons Attribution-ShareAlike 4.0 International**
 https://creativecommons.org/licenses/by-sa/4.0/
 
+The full local license text is included at `LICENSES/CC-BY-SA-4.0.txt`.
+
 ## Software License
 
 The software (firmware, Arduino sketches, DSP code) is licensed under the MIT License.
@@ -35,7 +37,7 @@ See LICENSE file for details.
 ### Suma Core (RT Audio Engine)
 - **License**: GNU Lesser General Public License v2.1 (LGPL-2.1)
 - **Repository**: https://github.com/kurogedelic/Suma
-- **Description**: Desktop real-time audio core that SumaShield applications are based on
+- **Description**: Related desktop real-time audio core whose architecture informs SumaShield. Suma Core source is not vendored in this repository.
 
 ## Attribution
 

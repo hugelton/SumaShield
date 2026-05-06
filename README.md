@@ -58,13 +58,14 @@ MIDI DIN:     GPIO 1 (RX)
 
 ## License
 
-**Software:** MIT License - See [LICENSE](LICENSE) for details
+**Firmware source and software documentation:** MIT License - See [LICENSE](LICENSE) for details.
 
-**Hardware:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
-See [HARDWARE.md](HARDWARE.md) for OSHW declaration.
+**Hardware design files and hardware-specific documentation:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+This applies to the KiCad design files, manufacturing outputs under `hardware/`, and hardware documentation.
+See [HARDWARE.md](HARDWARE.md) and [LICENSES/CC-BY-SA-4.0.txt](LICENSES/CC-BY-SA-4.0.txt) for details.
 
-**Suma Core:** GNU Lesser General Public License v2.1 (LGPL-2.1)
-See [LICENSES/LGPL-2.1.txt](LICENSES/LGPL-2.1.txt) for details.
+**External dependencies:** Arduino core and libraries are not vendored in this repository and remain under their upstream licenses.
+Suma Core is referenced as a related project under GNU Lesser General Public License v2.1 (LGPL-2.1); see [LICENSES/LGPL-2.1.txt](LICENSES/LGPL-2.1.txt).
 
 ---
 
