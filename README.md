@@ -1,111 +1,213 @@
 # SumaShield
 
-**SumaShield** is a collection of music performance applications for Raspberry Pi Pico (RP2040), featuring real-time DSP synthesis, dual-core architecture, and MIDI support.
+**An open-source audio/MIDI shield platform for Raspberry Pi Pico / Pico 2**
 
-## Applications
+SumaShield is a stackable shield designed for the Raspberry Pi Pico and Pico 2, providing dedicated I/O for real-time audio synthesis, MIDI communication, and user interfaces. Created as a reusable embedded DSP experimentation platform, SumaShield enables developers to build custom synthesizers, sequencers, effects processors, and experimental audio instruments.
 
-- **SumaDrums**: 8-track drum sequencer with step recording
-- **SumaFormants**: Monophonic formant vocoder synth with 8 vowel sounds
-- **MIDITester**: MIDI diagnostic tool for debugging reception issues
-
-## Features
-
-- Real-time DSP synthesis (22.05kHz, glitch-free)
-- Dual-core architecture (UI + Audio)
-- USB MIDI + DIN MIDI input
-- OLED display (72x40) with auto-sleep
-- Individual track parameters
-
-## Hardware
-
-**SumaShield Platform v0.5** - Shield for Raspberry Pi Pico/Pico 2
-
-### Components
-
-| Component | Required | Notes | Link |
-|-----------|----------|-------|------|
-| Raspberry Pi Pico | ✅ Required (Option A) | RP2040 board | [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) |
-| Raspberry Pi Pico 2 | ✅ Required (Option B) | RP2350 board, A4 stepping or later recommended | [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pico-2/) |
-| PT8211 I2S DAC | ✅ Yes | Integrated on shield | [PT8211 Datasheet](https://datasheet.lcsc.com/lcsc/1912171634_Pulse-Junheng-Elec-PT8211_C189289.pdf) |
-| OLED SSD1306 | ✅ Yes (Choose one) | Option A: 72x40 pixels (recommended, less noise) | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
-| OLED SSD1306 | ⚠️ Alternative | Option B: 0.96" 128x64 pixels (may have visual noise) | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
-| Cherry MX Switches | ✅ Yes | 8 keys (4x2 matrix), user-installed | [Cherry MX](https://www.cherrymx.de/en/products) |
-| Rotary Encoder | ✅ Yes | With push button | [EC11 Datasheet](https://datasheet.lcsc.com/lcsc/1811141824_Alps-Alpine-Electric-EC11E15244A3_C87793.pdf) |
-| Push Buttons (2x) | ✅ Yes | 6x6mm tactile, momentary | [TL3303 Datasheet](https://www.e-switch.com/system/asset/product_line/data_sheet/20/TL3303.pdf) |
-| Potentiometers (2x) | ✅ Yes | 10kΩ linear, for ADC input | - |
-| TRS 3.5mm Jack | ✅ Yes | MJ-8435, MIDI TRS IN/OUT + Audio Out | [AKIZUKI MJ-8435](https://akizukidenshi.com/catalog/g/g109060/) |
-| Electret Mic Module | Optional | SparkFun BOB-12758 or compatible, solder to ADC3 pad | [SparkFun BOB-12758](https://www.sparkfun.com/products/12758) |
-| NeoPixel SK6812MINI-E | ❌ Not supported | Planned for future hardware versions | [SK6812MINI-E Datasheet](https://cdn-shop.adafruit.com/product-files/4382/SK6812MINI-E+20200511.pdf) |
-
-### Pin Configuration
-
-| Signal | GPIO | Description | Notes |
-|--------|------|-------------|-------|
-| I2S DATA | 19 | PT8211 data input | LSBJ format |
-| I2S BCLK | 20 | PT8211 bit clock | - |
-| I2C SDA | 4 | OLED display data | 400kHz I2C |
-| I2C SCL | 5 | OLED display clock | - |
-| COL 0-3 | 12-15 | Key matrix columns | Output |
-| ROW 0-1 | 16-17 | Key matrix rows | Input pullup |
-| ROT SW | 9 | Rotary encoder button | Input pullup |
-| ROT CLK | 10 | Rotary encoder clock | Interrupt |
-| ROT DT | 11 | Rotary encoder data | Interrupt |
-| BTN A | 7 | Button A | Input pullup |
-| BTN B | 8 | Button B | Input pullup |
-| ADC 0 | 26 | Potentiometer 0 | 12-bit SAR ADC |
-| ADC 1 | 27 | Potentiometer 1 | 12-bit SAR ADC |
-| ADC 3 | 29 | Microphone input (rear pad) | Requires soldering |
-| NeoPin | 6 | NeoPixel SK6812MINI-E | ❌ Not supported in v0.5 |
-
-## Quick Start
-
-1. Install Arduino IDE 2.x
-2. Add Raspberry Pi Pico board support
-3. Install libraries: U8g2, Adafruit TinyUSB Library, MIDI
-4. Set USB Stack to "TinyUSB"
-5. Open `.ino` file and upload
-
-## Requirements
-
-**Libraries:**
-- I2S (built-in for RP2040)
-- Wire (built-in)
-- U8g2 (OLED display)
-- Adafruit TinyUSB Library
-- MIDI Library by Forty Seven Effects
-
-**Arduino IDE Settings:**
-- Board: Raspberry Pi Pico
-- USB Stack: TinyUSB
-
-## License
-
-**Firmware source and software documentation:** MIT License - See [LICENSE](LICENSE) for details.
-
-**Hardware design files and hardware-specific documentation:** Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
-This applies to the KiCad design files, manufacturing outputs under `hardware/`, and hardware documentation.
-See [HARDWARE.md](HARDWARE.md) and [LICENSES/CC-BY-SA-4.0.txt](LICENSES/CC-BY-SA-4.0.txt) for details.
-
-**External dependencies:** Arduino core and libraries are not vendored in this repository and remain under their upstream licenses.
-Suma Core is referenced as a related project under GNU Lesser General Public License v2.1 (LGPL-2.1); see [LICENSES/LGPL-2.1.txt](LICENSES/LGPL-2.1.txt).
+Inspired by the ClockworkPi PicoCalc ecosystem, SumaShield leverages the existing Pico development toolchain while adding specialized audio/MIDI hardware on top. The platform is open-source hardware (CC BY-SA 4.0), with firmware examples released under MIT license.
 
 ---
 
-**Author:** [Hugelton instruments](https://github.com/kurogedelic)  
-**Creator:** [Leo Kuroshita](https://github.com/kurogedelic) · [@kurogedelic](https://x.com/kurogedelic)
+## Features
+
+- **Shield Platform**: Stackable design for Raspberry Pi Pico / Pico 2
+- **Audio Output**: Stereo I2S DAC (PT8211) integrated on-board
+- **MIDI TRS**: 3.5mm jack supporting MIDI IN/OUT (Type A specification)
+- **Audio Output**: Line-level output via same 3.5mm TRS jack
+- **Display Support**: OLED SSD1306 (72x40 recommended, 128x64 compatible)
+- **User Input**: 8-key Cherry MX matrix, rotary encoder, 2 potentiometers
+- **Development**: Arduino IDE compatible, uses existing RP2040/RP2350 toolchain
+- **Expandable**: Optional microphone input, future NeoPixel support planned
+
+---
+
+## Philosophy
+
+SumaShield is designed as a **platform**, not a closed appliance. Unlike commercial synthesizers or audio gadgets, SumaShield assumes you will:
+
+- **Write your own firmware** - Use Arduino IDE, Pico SDK, or any RP2040/RP2350 development toolchain
+- **Design your own DSP** - Implement synthesis, sequencing, effects, or experimental audio algorithms
+- **Define your own UI** - The hardware provides controls; you decide what they do
+- **Learn and experiment** - Real-time DSP on a microcontroller is educational and fun
+
+The included applications (SumaDrums, SumaFormants, MIDITester) are **examples**, not the primary purpose. They demonstrate what's possible and serve as starting points for your own projects.
+
+---
+
+## Example Applications
+
+The repository includes several firmware examples demonstrating different approaches to audio/MIDI on SumaShield:
+
+### [SumaDrums](applications/SumaDrums/)
+8-track drum sequencer with step recording, individual track parameters, and pattern storage.
+
+### [SumaFormants](applications/SumaFormants/)
+Monophonic formant vocoder synth simulating human vowel sounds using three parallel resonant filters.
+
+### [MIDITester](applications/MIDITester/)
+MIDI diagnostic tool for debugging USB and DIN MIDI reception issues.
+
+### [NeopixelTest](applications/NeopixelTest/)
+WS2812 RGB LED test utility (for future NeoPixel support).
+
+---
+
+## Hardware
+
+SumaShield is a custom PCB that stacks onto Raspberry Pi Pico/Pico 2:
+
+**Required Components:**
+- Raspberry Pi Pico (RP2040) or Pico 2 (RP2350, A4+ stepping recommended)
+- PT8211 I2S DAC (on-board)
+- OLED SSD1306 display (72x40 recommended)
+- 8x Cherry MX switches (user-installed)
+- 3.5mm TRS jack (MJ-8435 type)
+- Rotary encoder, 2x push buttons, 2x potentiometers
+
+**Optional Components:**
+- Electret microphone module (SparkFun BOB-12758, rear pad ADC3)
+
+**For detailed hardware specifications, pinouts, and BOM, see [HARDWARE.md](HARDWARE.md)**
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+1. **Hardware**: Assemble SumaShield with Raspberry Pi Pico/Pico 2
+2. **Software**: Arduino IDE 2.x with Pico board support
+3. **Libraries**: Install required libraries (U8g2, Adafruit TinyUSB, MIDI)
+4. **Settings**: Set USB Stack to "TinyUSB"
+
+### Upload Example Firmware
+
+```bash
+# Flash example application
+cd applications/SumaDrums
+# Open SumaDrums.ino in Arduino IDE
+# Upload to Pico
+```
+
+### Develop Your Own Firmware
+
+```cpp
+// Basic I2S output example
+#include <I2S.h>
+
+I2S i2s(OUTPUT);
+
+void setup1() {
+  i2s.setBCLK(20);
+  i2s.setDATA(19);
+  i2s.begin(22050);  // 22.05kHz sample rate
+}
+
+void loop1() {
+  // Your DSP code here
+  int16_t sample = generate_sample();
+  i2s.write(sample);
+  i2s.write(sample);  // Stereo
+}
+```
+
+For complete examples, see the `applications/` directory.
+
+---
+
+## Specifications
+
+| Category | Specification |
+|----------|--------------|
+| **Host** | Raspberry Pi Pico (RP2040) or Pico 2 (RP2350) |
+| **Audio DAC** | PT8211 (I2S, 16-bit, up to 192kHz) |
+| **Display** | SSD1306 OLED (I2C, 72x40 or 128x64) |
+| **MIDI** | TRS 3.5mm Type A (IN/OUT), USB MIDI support |
+| **Audio Out** | Line-level via TRS jack (shared with MIDI) |
+| **Controls** | 8-key matrix, rotary encoder, 2x ADC pots, 2x buttons |
+| **Expandability** | Mic input (ADC3), NeoPixel (GPIO 6, future support) |
+| **Power** | 5V via USB (from Pico) |
+| **Form Factor** | Stackable shield, compatible with Pico/Pico 2 pinout |
+
+---
+
+## Development
+
+SumaShield firmware can be developed using:
+
+- **Arduino IDE** (Recommended for beginners)
+- **Pico SDK C/C++** (For advanced users)
+- **MicroPython/CircuitPython** (Possible, not yet documented)
+
+All examples use Arduino IDE for accessibility. Dual-core architecture (Core 0: UI, Core 1: Audio) is recommended for glitch-free audio, but not required.
+
+**Required Libraries:**
+- I2S (built-in for RP2040)
+- Wire (built-in)
+- U8g2 (OLED display)
+- Adafruit TinyUSB Library (USB MIDI)
+- MIDI Library by Forty Seven Effects
+
+---
+
+## Hardware Design Files
+
+Complete KiCad project sources are available in the `hardware/` directory:
+
+- Schematic
+- PCB layout
+- BOM (Bill of Materials)
+- Manufacturing outputs
+
+Licensed under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**.
+
+---
+
+## License
+
+**Firmware source and software documentation:** [MIT License](LICENSE)
+
+**Hardware design files and hardware-specific documentation:** [Creative Commons BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt)
+
+This separation means:
+- You can freely use/modify firmware in closed-source projects
+- Hardware modifications must be shared under the same license (CC BY-SA 4.0)
+- External dependencies (Arduino core, libraries) remain under their upstream licenses
+
+---
+
+## Resources
+
+- [Hardware Documentation](HARDWARE.md)
+- [Application Examples](applications/)
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+
+---
+
+## Acknowledgments
+
+SumaShield is inspired by:
+- [ClockworkPi PicoCalc](https://github.com/clockworkpi/BoardPackV2) - Pico-as-platform philosophy
+- [pikocore](https://github.com/schollz/pikocore) - Lo-fi audio mangler architecture
+- [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pico-pico/) - Compute platform
+
+---
 
 ## Hardware Version History
 
 ### v0.5 (Current)
 - Initial hardware release
-- Supports Raspberry Pi Pico (RP2040) or Pico 2 (RP2350, A4+ recommended)
-- PT8211 I2S DAC (on-board)
-- OLED display: 72x40 (recommended) or 128x64 (may have noise)
+- Supports Pico (RP2040) and Pico 2 (RP2350, A4+ recommended)
+- PT8211 I2S DAC on-board
+- OLED display support (72x40 recommended, 128x64 compatible)
+- MIDI TRS via 3.5mm jack (MJ-8435)
 - 8-key Cherry MX matrix
-- MIDI TRS input/output via 3.5mm jack (MJ-8435)
-- Audio output via same 3.5mm jack
-- Rotary encoder with button
-- 2 potentiometers
-- 2 function buttons
-- Optional electret microphone module (rear pad ADC3)
-- NeoPixel SK6812MINI-E support planned for future versions
+- Optional microphone input (ADC3 rear pad)
+- Open-source hardware (CC BY-SA 4.0)
+
+---
+
+**Platform Design:** [Hugelton instruments](https://github.com/hugelton)
+
+**Firmware Examples:** [Leo Kuroshita](https://github.com/kurogedelic) · [@kurogedelic](https://x.com/kurogedelic)
