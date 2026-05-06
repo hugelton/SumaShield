@@ -18,21 +18,24 @@
 
 ## Hardware
 
-**SumaShield Platform v0.5** - Shield for Raspberry Pi Pico/Pico 2/Clone boards
+**SumaShield Platform v0.5** - Shield for Raspberry Pi Pico/Pico 2
 
 ### Components
 
 | Component | Required | Notes | Link |
 |-----------|----------|-------|------|
-| Raspberry Pi Pico | ✅ Yes | Pico/Pico 2/Clone compatible | [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) |
+| Raspberry Pi Pico | ✅ Required (Option A) | RP2040 board | [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) |
+| Raspberry Pi Pico 2 | ✅ Required (Option B) | RP2350 board, A4 stepping or later recommended | [Raspberry Pi Pico 2](https://www.raspberrypi.com/products/raspberry-pico-2/) |
 | PT8211 I2S DAC | ✅ Yes | Integrated on shield | [PT8211 Datasheet](https://datasheet.lcsc.com/lcsc/1912171634_Pulse-Junheng-Elec-PT8211_C189289.pdf) |
-| OLED SSD1306 | ✅ Yes | 72x40 pixels, I2C interface | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
+| OLED SSD1306 | ✅ Yes (Choose one) | Option A: 72x40 pixels (recommended, less noise) | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
+| OLED SSD1306 | ⚠️ Alternative | Option B: 0.96" 128x64 pixels (may have visual noise) | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
 | Cherry MX Switches | ✅ Yes | 8 keys (4x2 matrix), user-installed | [Cherry MX](https://www.cherrymx.de/en/products) |
 | Rotary Encoder | ✅ Yes | With push button | [EC11 Datasheet](https://datasheet.lcsc.com/lcsc/1811141824_Alps-Alpine-Electric-EC11E15244A3_C87793.pdf) |
 | Push Buttons (2x) | ✅ Yes | 6x6mm tactile, momentary | [TL3303 Datasheet](https://www.e-switch.com/system/asset/product_line/data_sheet/20/TL3303.pdf) |
 | Potentiometers (2x) | ✅ Yes | 10kΩ linear, for ADC input | - |
-| MIDI DIN Connector | Optional | 5-pin DIN, via optoisolator (6N137) | [MIDI Spec](https://www.midi.org/specifications) |
-| 6N137 Optoisolator | Optional | For DIN MIDI input | [6N137 Datasheet](https://datasheet.lcsc.com/lcsc/1811141824_Vishay-6N137_C80782.pdf) |
+| TRS 3.5mm Jack | ✅ Yes | MJ-8435, MIDI TRS IN/OUT + Audio Out | [AKIZUKI MJ-8435](https://akizukidenshi.com/catalog/g/g109060/) |
+| Electret Mic Module | Optional | SparkFun BOB-12758 or compatible, solder to ADC3 pad | [SparkFun BOB-12758](https://www.sparkfun.com/products/12758) |
+| NeoPixel SK6812MINI-E | ❌ Not supported | Planned for future hardware versions | [SK6812MINI-E Datasheet](https://cdn-shop.adafruit.com/product-files/4382/SK6812MINI-E+20200511.pdf) |
 
 ### Pin Configuration
 
@@ -51,7 +54,8 @@
 | BTN B | 8 | Button B | Input pullup |
 | ADC 0 | 26 | Potentiometer 0 | 12-bit SAR ADC |
 | ADC 1 | 27 | Potentiometer 1 | 12-bit SAR ADC |
-| MIDI RX | 1 | DIN MIDI receive | 31250 baud UART |
+| ADC 3 | 29 | Microphone input (rear pad) | Requires soldering |
+| NeoPin | 6 | NeoPixel SK6812MINI-E | ❌ Not supported in v0.5 |
 
 ## Quick Start
 
@@ -94,10 +98,14 @@ Suma Core is referenced as a related project under GNU Lesser General Public Lic
 
 ### v0.5 (Current)
 - Initial hardware release
+- Supports Raspberry Pi Pico (RP2040) or Pico 2 (RP2350, A4+ recommended)
 - PT8211 I2S DAC (on-board)
-- 72x40 OLED display
+- OLED display: 72x40 (recommended) or 128x64 (may have noise)
 - 8-key Cherry MX matrix
-- Dual MIDI input (USB + DIN)
+- MIDI TRS input/output via 3.5mm jack (MJ-8435)
+- Audio output via same 3.5mm jack
 - Rotary encoder with button
 - 2 potentiometers
 - 2 function buttons
+- Optional electret microphone module (rear pad ADC3)
+- NeoPixel SK6812MINI-E support planned for future versions
