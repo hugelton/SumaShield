@@ -1,6 +1,10 @@
 # SumaShield
 
+
 **An open-source audio/MIDI shield platform for Raspberry Pi Pico / Pico 2**
+
+
+<img width="3545" height="2541" alt="IMG_6342" src="https://github.com/user-attachments/assets/e0e2c0d3-acbf-4e0f-bcbe-503bd82bd1a1" />
 
 SumaShield is a stackable shield designed for the Raspberry Pi Pico and Pico 2, providing dedicated I/O for real-time audio synthesis, MIDI communication, and user interfaces. Created as a reusable embedded DSP experimentation platform, SumaShield enables developers to build custom synthesizers, sequencers, effects processors, and experimental audio instruments.
 
