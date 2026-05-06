@@ -23,11 +23,11 @@ Inspired by the ClockworkPi PicoCalc ecosystem, SumaShield leverages the existin
 
 ## Why SumaShield?
 
-「Picoで音を出したいけど、ブレッドボードで組むのは面倒だし、既存の基板はちょっと高い……」
+"Want to make sound with Pico, but breadboarding is a hassle and existing shields are pricey..."
 
-そんな時にサクッと使える、シンプルで安価なオーディオシールドを目指しました。
+SumaShield aims to be a simple, affordable audio shield you can quickly grab and start using.
 
-難しいことは抜きにして、Picoでオーディオプログラミングを楽しもうぜ！というノリのプロジェクトです。
+This project is all about skipping the complicated stuff and just having fun with audio programming on Pico!
 
 ---
 
