@@ -2,6 +2,12 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 
+// Version information
+#define SUMADRUMS_VERSION_MAJOR 1
+#define SUMADRUMS_VERSION_MINOR 0
+#define SUMADRUMS_VERSION_PATCH 0
+#define SUMADRUMS_VERSION "1.0.0"
+
 // USB MIDI対応（TinyUSBスタック使用）
 #include <Adafruit_TinyUSB.h>
 #include <MIDI.h>
@@ -119,6 +125,10 @@ volatile float track_decay[8] = { 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 };
 
 volatile int last_triggered_track = -1;  // 最後に叩いた楽器
 bool is_manual_trigger = false;          // マニュアルトリガーかどうか
+
+// デバウンス用（個別ボタンのダブルトリガー防止）
+unsigned long last_trigger_time[8] = { 0 };
+#define TRIGGER_DEBOUNCE_MS 50  // 50ms以内のダブルトリガーを無視
 
 // ADC変化検出用
 int last_adc_decay = 0;
@@ -246,6 +256,11 @@ void rotary_isr() {
 // ==========================================
 void setup() {
   Serial.begin(115200);
+  Serial.print("SumaDrums v");
+  Serial.println(SUMADRUMS_VERSION);
+  Serial.println("8-track drum sequencer with step recording");
+  Serial.println("Press keys to preview, adjust pots for parameters");
+  Serial.println();
 
   pinMode(PIN_BTN_A, INPUT_PULLUP);
   pinMode(PIN_BTN_B, INPUT_PULLUP);
@@ -451,31 +466,37 @@ void loop() {
         if (btn_b_state == LONG_PRESSING) {
           seq[key_idx][current_step] = 0;  // ノート削除
         } else {
-          // 通常のキー操作
-          if (is_recording) {
-            // Recordモード: 現在のステップをトグル
-            seq[key_idx][current_step] = !seq[key_idx][current_step];
-            // トグルされたら即座に鳴らす
-            if (seq[key_idx][current_step]) {
+          // デバウンスチェック（ダブルトリガー防止）
+          unsigned long now = millis();
+          if (now - last_trigger_time[key_idx] > TRIGGER_DEBOUNCE_MS) {
+            // 通常のキー操作
+            if (is_recording) {
+              // Recordモード: 現在のステップをトグル
+              seq[key_idx][current_step] = !seq[key_idx][current_step];
+              // トグルされたら即座に鳴らす
+              if (seq[key_idx][current_step]) {
+                envs[key_idx] = 1.0;
+                phase_reset_request[key_idx] = true;  // Core 1でリセット
+                last_triggered_track = key_idx;
+                is_manual_trigger = true;
+                last_trigger_time[key_idx] = now;  // トリガー時刻を記録
+              }
+            } else {
+              // Playモード: 手動トリガー
               envs[key_idx] = 1.0;
               phase_reset_request[key_idx] = true;  // Core 1でリセット
               last_triggered_track = key_idx;
               is_manual_trigger = true;
+              last_trigger_time[key_idx] = now;  // トリガー時刻を記録
             }
-          } else {
-            // Playモード: 手動トリガー
-            envs[key_idx] = 1.0;
-            phase_reset_request[key_idx] = true;  // Core 1でリセット
-            last_triggered_track = key_idx;
-            is_manual_trigger = true;
+
+            // 【チョーク処理】Close Hat → Open Hat
+            if (key_idx == 2) envs[3] = 0;
+
+            // キー操作があったのでアクティビティ時間を更新
+            last_activity_time = millis();
+            key_activity_detected = true;
           }
-
-          // 【チョーク処理】Close Hat → Open Hat
-          if (key_idx == 2) envs[3] = 0;
-
-          // キー操作があったのでアクティビティ時間を更新
-          last_activity_time = millis();
-          key_activity_detected = true;
         }
       }
       last_key_state[key_idx] = pressed;
@@ -490,30 +511,36 @@ void loop() {
       last_key_state[i] = g_midi_key_state[i];
 
       if (g_midi_key_state[i] && !prev_midi_key_state[i]) {
-        // MIDI Note On
-        if (is_recording) {
-          // Recordモード: 現在のステップをトグル
-          seq[i][current_step] = !seq[i][current_step];
-          // トグルされたら即座に鳴らす
-          if (seq[i][current_step]) {
+        // デバウンスチェック（ダブルトリガー防止）
+        unsigned long now = millis();
+        if (now - last_trigger_time[i] > TRIGGER_DEBOUNCE_MS) {
+          // MIDI Note On
+          if (is_recording) {
+            // Recordモード: 現在のステップをトグル
+            seq[i][current_step] = !seq[i][current_step];
+            // トグルされたら即座に鳴らす
+            if (seq[i][current_step]) {
+              envs[i] = 1.0;
+              phase_reset_request[i] = true;
+              last_triggered_track = i;
+              is_manual_trigger = true;
+              last_trigger_time[i] = now;  // トリガー時刻を記録
+            }
+          } else {
+            // Playモード: 手動トリガー
             envs[i] = 1.0;
             phase_reset_request[i] = true;
             last_triggered_track = i;
             is_manual_trigger = true;
+            last_trigger_time[i] = now;  // トリガー時刻を記録
           }
-        } else {
-          // Playモード: 手動トリガー
-          envs[i] = 1.0;
-          phase_reset_request[i] = true;
-          last_triggered_track = i;
-          is_manual_trigger = true;
+
+          // 【チョーク処理】Close Hat → Open Hat
+          if (i == 2) envs[3] = 0;
+
+          // MIDI操作があったのでアクティビティ時間を更新
+          last_activity_time = millis();
         }
-
-        // 【チョーク処理】Close Hat → Open Hat
-        if (i == 2) envs[3] = 0;
-
-        // MIDI操作があったのでアクティビティ時間を更新
-        last_activity_time = millis();
       }
       prev_midi_key_state[i] = g_midi_key_state[i];
     }
@@ -662,7 +689,14 @@ void drawOLED() {
   u8g2.print("BPM:");
   u8g2.print(current_bpm);
 
-  if (is_recording) {
+  // Show version occasionally
+  static int version_counter = 0;
+  if (version_counter < 10) {  // Show for first 10 frames
+    u8g2.setCursor(35, 39);
+    u8g2.print("v");
+    u8g2.print(SUMADRUMS_VERSION);
+    version_counter++;
+  } else if (is_recording) {
     u8g2.print(" R");
   } else {
     u8g2.print(" P");

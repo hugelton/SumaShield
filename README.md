@@ -19,6 +19,7 @@
 ## Hardware
 
 **SumaShield Platform (Shield Compatible with RP2040 Boards):**
+- **Version:** 0.5
 - Raspberry Pi Pico / Pico 2 / Clone boards
 - **On-board I2S DAC:** PT8211 (integrated on shield)
 - OLED SSD1306 (72x40)
@@ -72,3 +73,15 @@ Suma Core is referenced as a related project under GNU Lesser General Public Lic
 
 **Author:** [Hugelton instruments](https://github.com/kurogedelic)  
 **Creator:** [Leo Kuroshita](https://github.com/kurogedelic) · [@kurogedelic](https://x.com/kurogedelic)
+
+## Hardware Version History
+
+### v0.5 (Current)
+- Initial hardware release
+- PT8211 I2S DAC (on-board)
+- 72x40 OLED display
+- 8-key Cherry MX matrix
+- Dual MIDI input (USB + DIN)
+- Rotary encoder with button
+- 2 potentiometers
+- 2 function buttons

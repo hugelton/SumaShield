@@ -1,6 +1,12 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 
+// Version information
+#define MIDITESTER_VERSION_MAJOR 1
+#define MIDITESTER_VERSION_MINOR 0
+#define MIDITESTER_VERSION_PATCH 0
+#define MIDITESTER_VERSION "1.0.0"
+
 // USB MIDI対応（TinyUSBスタック使用）
 #include <Adafruit_TinyUSB.h>
 #include <MIDI.h>
@@ -250,6 +256,8 @@ void setup() {
 
   Serial.println("========================================");
   Serial.println("MIDITester - USB + Serial MIDI Monitor");
+  Serial.print("Version ");
+  Serial.println(MIDITESTER_VERSION);
   Serial.println("========================================");
   Serial.println("Monitoring both USB and DIN MIDI...");
   Serial.println("Connect your MIDI controller and play!");

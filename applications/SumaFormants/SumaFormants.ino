@@ -2,6 +2,12 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 
+// Version information
+#define SUMAFORMANTS_VERSION_MAJOR 1
+#define SUMAFORMANTS_VERSION_MINOR 0
+#define SUMAFORMANTS_VERSION_PATCH 0
+#define SUMAFORMANTS_VERSION "1.0.0"
+
 // USB MIDI対応（TinyUSBスタック使用）
 #include <Adafruit_TinyUSB.h>
 #include <MIDI.h>
@@ -54,6 +60,7 @@ const float VOWEL_F3[8] = { 3200.0f, 3000.0f, 2800.0f, 2500.0f, 2440.0f, 2300.0f
 volatile bool  g_key_state[8]  = { false };
 volatile float g_breath        = 0.0f;   // 0.0 ~ 1.0
 volatile float g_pitch_semitone = 0.0f;  // ピッチ（セミトーン単位、-12 ~ +12）
+volatile float g_formant_offset = 0.0f; // フォルマントオフセット（Hz単位、-100 ~ +100）
 volatile bool  g_octave_down   = false;
 volatile float g_envs[8]       = { 0.0f }; // Core 1が更新、Core 0が参照
 volatile int  g_key_change_flag = -1;    // キー切り替えフラグ（切り替わった瞬間に新しいキー番号をセット）
@@ -136,17 +143,17 @@ void rotary_isr() {
     uint8_t dt_state = digitalRead(PIN_ROTARY_DT);
 
     if (dt_state == LOW) {
-      rotary_counter--;  // 反転：右回転で音が高くなる
+      rotary_counter--;  // 右回転：フォルマントを高く
     } else {
-      rotary_counter++;  // 反転：左回転で音が低くなる
+      rotary_counter++;  // 左回転：フォルマントを低く
     }
 
-    // 制限: -12(1オクターブ下) 〜 +12(1オクターブ上)
-    if (rotary_counter < -12) rotary_counter = -12;
-    if (rotary_counter > 12) rotary_counter = 12;
+    // 制限: -100Hz 〜 +100Hz
+    if (rotary_counter < -100) rotary_counter = -100;
+    if (rotary_counter > 100) rotary_counter = 100;
 
-    // セミトーンオフセットとして設定
-    g_pitch_semitone = (float)rotary_counter;
+    // フォルマントオフセットとして設定
+    g_formant_offset = (float)rotary_counter;
 
     // ロータリ操作があったのでアクティビティ時間を更新
     last_activity_time = millis();
@@ -257,21 +264,17 @@ void drawOLED() {
   // 口の描画（角丸の四角形にして柔らかい表情に）
   u8g2.drawRBox(center_x - mouth_w/2, mouth_y - mouth_h/2, mouth_w, mouth_h, 1);
 
-  // ピッチインジケーター（左上）
+  // フォルマントオフセットインジケーター（左上）
   u8g2.setFont(u8g2_font_4x6_tr);
   u8g2.setCursor(0, 6);
-  if (g_midi_pitch > 0.0f) {
-    u8g2.print("M"); // MIDIピッチ使用中
+  int offset_hz = (int)g_formant_offset;
+  if (offset_hz >= 0) {
+    u8g2.print("+");
+    u8g2.print(offset_hz);
   } else {
-    int pitch_st = (int)g_pitch_semitone;
-    if (pitch_st >= 0) {
-      u8g2.print("+");
-      u8g2.print(pitch_st);
-    } else {
-      u8g2.print(pitch_st);
-    }
-    u8g2.print("st");
+    u8g2.print(offset_hz);
   }
+  u8g2.print("Hz");
   u8g2.print(" ");
   u8g2.print((int)g_base_pitch);
   u8g2.print("Hz");
@@ -299,6 +302,10 @@ void drawOLED() {
 
 void setup() {
   Serial.begin(115200);
+  Serial.print("SumaFormants v");
+  Serial.println(SUMAFORMANTS_VERSION);
+  Serial.println("Monophonic formant vocoder synth with 8 vowel sounds");
+  Serial.println();
 
   // TinyUSBスタック初期化
   TinyUSB_Device_Init(0);
@@ -590,9 +597,15 @@ void loop1() {
   // アクティブキーが変わった場合、フォルマント値をターゲットにリセット（ズレ防止）
   if (active_key != prev_active_key) {
     if (active_key >= 0) {
-      current_f1 = VOWEL_F1[active_key];
-      current_f2 = VOWEL_F2[active_key];
-      current_f3 = VOWEL_F3[active_key];
+      // ロータリーエンコーダーによるオフセット適用
+      current_f1 = VOWEL_F1[active_key] + g_formant_offset;
+      current_f2 = VOWEL_F2[active_key] + g_formant_offset;
+      current_f3 = VOWEL_F3[active_key] + g_formant_offset;
+
+      // フォルマント周波数が最低100Hzを下回らないようにクランプ
+      if (current_f1 < 100.0f) current_f1 = 100.0f;
+      if (current_f2 < 100.0f) current_f2 = 100.0f;
+      if (current_f3 < 100.0f) current_f3 = 100.0f;
     }
     prev_active_key = active_key;
   }
@@ -623,10 +636,15 @@ void loop1() {
     float source = (saw * (1.0f - current_breath)) + (noise * current_breath);
 
     // --- フォルマントポートメント ---
-    // ターゲット値を設定
-    float target_f1 = VOWEL_F1[i];
-    float target_f2 = VOWEL_F2[i];
-    float target_f3 = VOWEL_F3[i];
+    // ターゲット値を設定（ロータリーエンコーダーによるオフセット適用）
+    float target_f1 = VOWEL_F1[i] + g_formant_offset;
+    float target_f2 = VOWEL_F2[i] + g_formant_offset;
+    float target_f3 = VOWEL_F3[i] + g_formant_offset;
+
+    // フォルマント周波数が最低100Hzを下回らないようにクランプ
+    if (target_f1 < 100.0f) target_f1 = 100.0f;
+    if (target_f2 < 100.0f) target_f2 = 100.0f;
+    if (target_f3 < 100.0f) target_f3 = 100.0f;
 
     if (portamento_counter > 0.0f) {
       // キー切り替え直後：ポートメント有効
