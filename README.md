@@ -11,7 +11,7 @@ Inspired by the ClockworkPi PicoCalc ecosystem, SumaShield leverages the existin
 ## Features
 
 - **Shield Platform**: Stackable design for Raspberry Pi Pico / Pico 2
-- **Audio Output**: Stereo I2S DAC (PT8211) integrated on-board
+- **Audio Output**: PT8211 16-bit DAC (LSB Justified format, not standard I2S)
 - **MIDI TRS**: 3.5mm jack supporting MIDI IN/OUT (Type A specification)
 - **Audio Output**: Line-level output via same 3.5mm TRS jack
 - **Display Support**: OLED SSD1306 (72x40 recommended, 128x64 compatible)
@@ -21,7 +21,17 @@ Inspired by the ClockworkPi PicoCalc ecosystem, SumaShield leverages the existin
 
 ---
 
-## Philosophy
+## Why SumaShield?
+
+「Picoで音を出したいけど、ブレッドボードで組むのは面倒だし、既存の基板はちょっと高い……」
+
+そんな時にサクッと使える、シンプルで安価なオーディオシールドを目指しました。
+
+難しいことは抜きにして、Picoでオーディオプログラミングを楽しもうぜ！というノリのプロジェクトです。
+
+---
+
+### What SumaShield Is
 
 SumaShield is designed as a **platform**, not a closed appliance. Unlike commercial synthesizers or audio gadgets, SumaShield assumes you will:
 
@@ -58,7 +68,7 @@ SumaShield is a custom PCB that stacks onto Raspberry Pi Pico/Pico 2:
 
 **Required Components:**
 - Raspberry Pi Pico (RP2040) or Pico 2 (RP2350, A4+ stepping recommended)
-- PT8211 I2S DAC (on-board)
+- PT8211 16-bit DAC (on-board, LSB Justified format)
 - OLED SSD1306 display (72x40 recommended)
 - 8x Cherry MX switches
 - 3.5mm TRS jack (MJ-8435 type)
@@ -120,7 +130,7 @@ For complete examples, see the `applications/` directory.
 | Category | Specification |
 |----------|--------------|
 | **Host** | Raspberry Pi Pico (RP2040) or Pico 2 (RP2350) |
-| **Audio DAC** | PT8211 (I2S, 16-bit, up to 192kHz) |
+| **Audio DAC** | PT8211 (16-bit, LSB Justified format) |
 | **Display** | SSD1306 OLED (I2C, 72x40 or 128x64) |
 | **MIDI** | TRS 3.5mm Type A (IN/OUT), USB MIDI support |
 | **Audio Out** | Line-level via TRS jack (shared with MIDI) |
