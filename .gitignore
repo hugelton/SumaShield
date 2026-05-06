@@ -1,5 +1,7 @@
 # Claude Code documentation (contains internal project details)
 .claude/
+CLAUDE.md
+AGENTS.md
 
 # macOS
 .DS_Store
