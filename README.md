@@ -18,24 +18,40 @@
 
 ## Hardware
 
-**SumaShield Platform (Shield Compatible with RP2040 Boards):**
-- **Version:** 0.5
-- Raspberry Pi Pico / Pico 2 / Clone boards
-- **On-board I2S DAC:** PT8211 (integrated on shield)
-- OLED SSD1306 (72x40)
-- **Key Switches:** Cherry MX compatible (8 keys)
-- Rotary encoder, 2x buttons, 2x pots
+**SumaShield Platform v0.5** - Shield for Raspberry Pi Pico/Pico 2/Clone boards
 
-**Pin Configuration:**
-```
-I2S Audio:    GPIO 19 (DATA), GPIO 20 (BCLK) - PT8211 on shield
-I2C Display:  GPIO 4 (SDA), GPIO 5 (SCL)
-Key Matrix:   GPIO 12-15 (COL), GPIO 16-17 (ROW) - Cherry MX sockets
-Rotary:       GPIO 9 (SW), GPIO 10 (CLK), GPIO 11 (DT)
-Buttons:      GPIO 7 (A), GPIO 8 (B)
-ADC:          GPIO 26, GPIO 27
-MIDI DIN:     GPIO 1 (RX)
-```
+### Components
+
+| Component | Required | Notes | Link |
+|-----------|----------|-------|------|
+| Raspberry Pi Pico | ✅ Yes | Pico/Pico 2/Clone compatible | [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) |
+| PT8211 I2S DAC | ✅ Yes | Integrated on shield | [PT8211 Datasheet](https://datasheet.lcsc.com/lcsc/1912171634_Pulse-Junheng-Elec-PT8211_C189289.pdf) |
+| OLED SSD1306 | ✅ Yes | 72x40 pixels, I2C interface | [SSD1306 Datasheet](https://www.solomon-systech.com/files/default/catalogue%20archive/SSD1306%20oLED%20Driver%20IC%20Rev%201.1.pdf) |
+| Cherry MX Switches | ✅ Yes | 8 keys (4x2 matrix), user-installed | [Cherry MX](https://www.cherrymx.de/en/products) |
+| Rotary Encoder | ✅ Yes | With push button | [EC11 Datasheet](https://datasheet.lcsc.com/lcsc/1811141824_Alps-Alpine-Electric-EC11E15244A3_C87793.pdf) |
+| Push Buttons (2x) | ✅ Yes | 6x6mm tactile, momentary | [TL3303 Datasheet](https://www.e-switch.com/system/asset/product_line/data_sheet/20/TL3303.pdf) |
+| Potentiometers (2x) | ✅ Yes | 10kΩ linear, for ADC input | - |
+| MIDI DIN Connector | Optional | 5-pin DIN, via optoisolator (6N137) | [MIDI Spec](https://www.midi.org/specifications) |
+| 6N137 Optoisolator | Optional | For DIN MIDI input | [6N137 Datasheet](https://datasheet.lcsc.com/lcsc/1811141824_Vishay-6N137_C80782.pdf) |
+
+### Pin Configuration
+
+| Signal | GPIO | Description | Notes |
+|--------|------|-------------|-------|
+| I2S DATA | 19 | PT8211 data input | LSBJ format |
+| I2S BCLK | 20 | PT8211 bit clock | - |
+| I2C SDA | 4 | OLED display data | 400kHz I2C |
+| I2C SCL | 5 | OLED display clock | - |
+| COL 0-3 | 12-15 | Key matrix columns | Output |
+| ROW 0-1 | 16-17 | Key matrix rows | Input pullup |
+| ROT SW | 9 | Rotary encoder button | Input pullup |
+| ROT CLK | 10 | Rotary encoder clock | Interrupt |
+| ROT DT | 11 | Rotary encoder data | Interrupt |
+| BTN A | 7 | Button A | Input pullup |
+| BTN B | 8 | Button B | Input pullup |
+| ADC 0 | 26 | Potentiometer 0 | 12-bit SAR ADC |
+| ADC 1 | 27 | Potentiometer 1 | 12-bit SAR ADC |
+| MIDI RX | 1 | DIN MIDI receive | 31250 baud UART |
 
 ## Quick Start
 
