@@ -58,6 +58,9 @@ const int KEY_MAP[8] = { 0, 4, 1, 5, 2, 6, 3, 7 };  // Physical layout
 #define COLOR_ORDER GRB
 #define BRIGHTNESS 100
 
+// Set this to false to test without LED matrix (for debugging)
+#define ENABLE_FASTLED true
+
 CRGB leds[NUM_LEDS];
 
 // ==========================================
@@ -70,16 +73,18 @@ U8G2_SSD1306_72X40_ER_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 // ==========================================
 uint16_t timePos = 0;
 int currentMode = 0;
-const int MAX_MODES = 6;
+const int MAX_MODES = 8;
 
 // Mode names for OLED display
-const char* MODE_NAMES[6] = {
+const char* MODE_NAMES[8] = {
   "Noise Mesh",
   "Voronoi",
   "Plasma",
   "Ripples",
   "Matrix Rain",
-  "Fire"
+  "Fire",
+  "Tetris X",
+  "Tetris Rot"
 };
 
 // Knob values
@@ -102,6 +107,11 @@ bool oled_is_on = true;
 // Flash effect state
 bool flash_active = false;
 
+// Tetris state
+int8_t tetris_x = 8;        // X position (0-15)
+int8_t tetris_rot = 0;     // Rotation (0-3)
+bool tetris_btn_a_prev = false;
+
 // ==========================================
 // --- Helper Functions ---
 // ==========================================
@@ -115,19 +125,19 @@ uint16_t XY(uint8_t x, uint8_t y) {
   }
 }
 
-// Key matrix scanning
+// Key matrix scanning (SumaShield: COL=INPUT, ROW=OUTPUT)
 void scanKeyMatrix() {
-  for (int col = 0; col < 4; col++) {
-    // Set current column LOW, others HIGH
-    for (int c = 0; c < 4; c++) {
-      digitalWrite(COL_PINS[c], (c == col) ? LOW : HIGH);
+  for (int row = 0; row < 2; row++) {
+    // Set current row LOW, others HIGH
+    for (int r = 0; r < 2; r++) {
+      digitalWrite(ROW_PINS[r], (r == row) ? LOW : HIGH);
     }
     delayMicroseconds(10);
 
-    // Read both rows
-    for (int row = 0; row < 2; row++) {
+    // Read all 4 columns
+    for (int col = 0; col < 4; col++) {
       int key_idx = KEY_MAP[col + row * 4];
-      bool pressed = (digitalRead(ROW_PINS[row]) == LOW);
+      bool pressed = (digitalRead(COL_PINS[col]) == LOW);
       key_state[key_idx] = pressed;
     }
   }
@@ -309,6 +319,57 @@ void drawFire(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
   }
 }
 
+// Mode 6: Tetris X (knob 1 controls X position)
+void drawTetrisX(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
+  // Clear all LEDs first
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+
+  // Draw 4x4 tetromino at tetris_x position
+  int8_t base_x = constrain(tetris_x + fineOffset, 0, 12);
+  int8_t base_y = 6;  // Center vertically
+
+  // Simple 2x2 block (O-piece)
+  for (int dy = 0; dy < 2; dy++) {
+    for (int dx = 0; dx < 2; dx++) {
+      int x = base_x + dx;
+      int y = base_y + dy;
+      if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
+        leds[XY(x, y)] = CHSV(colorOffset, 255, 255);
+      }
+    }
+  }
+}
+
+// Mode 7: Tetris Rotation (button A cycles rotation)
+void drawTetrisRot(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
+  // Clear all LEDs first
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
+
+  // Draw tetromino based on rotation
+  int8_t base_x = 8 + fineOffset;
+  int8_t base_y = 6;
+
+  // Rotation patterns for I-piece (4x1 vertical)
+  // rot 0: vertical, rot 1: horizontal
+  if (tetris_rot % 2 == 0) {
+    // Vertical
+    for (int dy = 0; dy < 4; dy++) {
+      int y = base_y + dy - 1;
+      if (y >= 0 && y < MATRIX_HEIGHT) {
+        leds[XY(base_x, y)] = CHSV(colorOffset + (dy * 20), 255, 255);
+      }
+    }
+  } else {
+    // Horizontal
+    for (int dx = 0; dx < 4; dx++) {
+      int x = base_x + dx - 1;
+      if (x >= 0 && x < MATRIX_WIDTH) {
+        leds[XY(x, base_y)] = CHSV(colorOffset + (dx * 20), 255, 255);
+      }
+    }
+  }
+}
+
 // ==========================================
 // --- Main Setup ---
 // ==========================================
@@ -321,18 +382,23 @@ void setup() {
   Serial.println();
 
   // Initialize NeoPixel on GPIO 2
+#if ENABLE_FASTLED
   FastLED.addLeds<LED_TYPE, NEOPIXEL_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
   FastLED.clear();
   FastLED.show();
+  Serial.println("FastLED initialized on GPIO 2");
+#else
+  Serial.println("FastLED disabled - testing key matrix only");
+#endif
 
-  // Initialize key matrix
+  // Initialize key matrix (SumaShield: COL=INPUT, ROW=OUTPUT)
   for (int i = 0; i < 4; i++) {
-    pinMode(COL_PINS[i], OUTPUT);
-    digitalWrite(COL_PINS[i], HIGH);
+    pinMode(COL_PINS[i], INPUT);
   }
   for (int i = 0; i < 2; i++) {
-    pinMode(ROW_PINS[i], INPUT_PULLUP);
+    pinMode(ROW_PINS[i], OUTPUT);
+    digitalWrite(ROW_PINS[i], HIGH);
   }
 
   // Initialize rotary encoder
@@ -353,6 +419,7 @@ void setup() {
 
   Serial.println("PixelSynth initialized");
   Serial.println("NeoPixel on GPIO 2");
+  Serial.println("Key matrix test - press keys to test:");
   Serial.println();
 }
 
@@ -362,18 +429,26 @@ void setup() {
 
 void loop() {
   // 1. Read knobs
-  knob1Value = analogRead(PIN_KNOB_1);  // Speed / Scale
+  knob1Value = analogRead(PIN_KNOB_1);  // Speed / Scale / Tetris X
   knob2Value = analogRead(PIN_KNOB_2);  // Color / Brightness
+
+  // Update tetris X position based on knob 1 (mode 6)
+  if (currentMode == 6) {
+    tetris_x = map(knob1Value, 0, 4095, 0, 15);
+  }
 
   // 2. Scan key matrix for mode switching
   scanKeyMatrix();
 
   // Check for mode switch (key press)
+  // Keys 0-7 switch to modes 0-7
   for (int i = 0; i < 8; i++) {
     if (key_state[i] && !last_key_state[i]) {
-      currentMode = i % MAX_MODES;  // Only modes 0-5
+      currentMode = i;
       last_activity_time = millis();
-      Serial.print("Mode: ");
+      Serial.print("Key ");
+      Serial.print(i);
+      Serial.print(" pressed -> Mode: ");
       Serial.print(currentMode);
       Serial.print(" - ");
       Serial.println(MODE_NAMES[currentMode]);
@@ -381,9 +456,25 @@ void loop() {
     last_key_state[i] = key_state[i];
   }
 
-  // 3. Read button A (flash effect)
-  flash_active = (digitalRead(PIN_BTN_A) == LOW);
-  if (flash_active) {
+  // 3. Read button A (flash effect for modes 0-5, rotation for mode 7)
+  bool btn_a_pressed = (digitalRead(PIN_BTN_A) == LOW);
+
+  if (currentMode == 7) {
+    // Mode 7: Button A cycles rotation
+    if (btn_a_pressed && !tetris_btn_a_prev) {
+      tetris_rot = (tetris_rot + 1) % 4;
+      last_activity_time = millis();
+      Serial.print("Tetris rotation: ");
+      Serial.println(tetris_rot);
+    }
+    tetris_btn_a_prev = btn_a_pressed;
+    flash_active = false;  // No flash in mode 7
+  } else {
+    // Modes 0-6: Button A triggers flash effect
+    flash_active = btn_a_pressed;
+  }
+
+  if (flash_active || btn_a_pressed) {
     last_activity_time = millis();
   }
 
@@ -404,6 +495,8 @@ void loop() {
       case 3: drawRipples(scaleVal, colorOffset, rotaryOffset); break;
       case 4: drawMatrixRain(scaleVal, colorOffset, rotaryOffset); break;
       case 5: drawFire(scaleVal, colorOffset, rotaryOffset); break;
+      case 6: drawTetrisX(scaleVal, colorOffset, rotaryOffset); break;
+      case 7: drawTetrisRot(scaleVal, colorOffset, rotaryOffset); break;
     }
   } else {
     // Flash white effect
@@ -411,15 +504,17 @@ void loop() {
   }
 
   // 7. Update LED matrix
+#if ENABLE_FASTLED
   FastLED.show();
+#endif
 
   // 8. Update OLED display
   static unsigned long last_draw_time = 0;
-  if (millis() - last_draw_time > 33) {  // ~30fps
+  if (millis() - last_draw_time > 100) {  // 10fps (reduce CPU load)
     drawOLED();
     last_draw_time = millis();
   }
 
   // 9. Small delay
-  delay(10);
+  delay(5);
 }

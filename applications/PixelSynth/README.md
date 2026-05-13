@@ -34,7 +34,7 @@ PixelSynth is a visual synthesizer that generates real-time animated patterns on
 
 ## Controls
 
-### Key Matrix (Keys 0-5)
+### Key Matrix (Keys 0-7)
 
 | Key | Mode | Description |
 |-----|------|-------------|
@@ -44,8 +44,8 @@ PixelSynth is a visual synthesizer that generates real-time animated patterns on
 | 3 | Ripples | Expanding concentric rings from center |
 | 4 | Matrix Rain | Digital rain effect (Matrix-style) |
 | 5 | Fire | Rising flames with color gradients |
-
-**Keys 6-7**: Reserved for future modes
+| 6 | Tetris X | 2x2 block, move left/right with Knob 1 |
+| 7 | Tetris Rot | 4x1 block, rotate with Button A |
 
 ### Knob 1 (ADC 26) - Speed / Scale
 
@@ -181,6 +181,24 @@ Rising flames with color gradients (red → orange → yellow). Simulates fire o
 - Knob 1: Flame height and turbulence
 - Knob 2: Color temperature (red → yellow)
 - Rotary: Wind/drift offset
+
+### Mode 6: Tetris X
+
+Interactive 2x2 tetromino block that moves horizontally. Simple demo of game mechanics.
+
+**Parameters:**
+- Knob 1: Horizontal position (left/right)
+- Rotary: Fine position adjustment
+- Button A: No effect (use flash)
+
+### Mode 7: Tetris Rot
+
+Interactive 4x1 tetromino that rotates 90 degrees. Demonstrates piece rotation mechanics.
+
+**Parameters:**
+- Knob 1: No effect
+- Rotary: Fine position adjustment
+- Button A: Rotate 90 degrees (cycles 0→1→2→3→0)
 
 ## Performance Tips
 
