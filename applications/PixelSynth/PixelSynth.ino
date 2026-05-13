@@ -107,10 +107,56 @@ bool oled_is_on = true;
 // Flash effect state
 bool flash_active = false;
 
-// Tetris state
-int8_t tetris_x = 8;        // X position (0-15)
-int8_t tetris_rot = 0;     // Rotation (0-3)
-bool tetris_btn_a_prev = false;
+// Tetris state for mode 6
+int8_t tetris_x = 8;        // Current piece X position
+int8_t tetris_y = 0;        // Current piece Y position
+int8_t tetris_rot = 0;     // Current piece rotation (0-3)
+int8_t tetris_type = 0;     // Current piece type (0-6)
+uint16_t tetris_score = 0;  // Score
+bool tetris_game_over = false;
+uint32_t tetris_drop_timer = 0;
+const uint16_t TETRIS_DROP_SPEED = 10; // Frames between auto-drop
+
+// Tetromino definitions (4x4 grids, 1=filled, 0=empty)
+// 7 types: I(0), O(1), T(2), S(3), Z(4), J(5), L(6)
+const uint8_t TETROMINOES[7][4][4] = {
+  // I (4x1 vertical)
+  {{0,1,0,0}, {0,1,0,0}, {0,1,0,0}, {0,1,0,0}},
+  // O (2x2 square)
+  {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}},
+  // T (T-shape)
+  {{0,1,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}},
+  // S (S-shape)
+  {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}},
+  // Z (Z-shape)
+  {{1,1,0,0}, {0,1,1,0}, {0,0,0,0}, {0,0,0,0}},
+  // J (J-shape)
+  {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}},
+  // L (L-shape)
+  {{0,0,1,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}}
+};
+
+const uint8_t TETROMINO_COLORS[7] = {
+  0,   // I: Red
+  40,  // O: Gold
+  80,  // T: Magenta
+  120, // S: Green
+  160, // Z: Blue
+  200, // J: Orange
+  240  // L: Purple
+};
+
+// Game board (16x16, 0=empty, 1-7=locked pieces)
+uint8_t board[16][16] = {0};
+
+// PONG state for mode 7
+float pong_ball_x = 8.0;
+float pong_ball_y = 8.0;
+float pong_ball_vx = 0.5;
+float pong_ball_vy = 0.3;
+float pong_paddle_x = 6.0;
+uint16_t pong_score = 0;
+bool pong_game_over = false;
 
 // ==========================================
 // --- Helper Functions ---
