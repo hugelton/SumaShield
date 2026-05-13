@@ -35,7 +35,7 @@
 // ==========================================
 // --- Pin Configuration (SumaShield) ---
 // ==========================================
-const int NEOPIXEL_PIN = 6;        // GPIO 6 (future support, not populated in v0.5)
+const int NEOPIXEL_PIN = 2;         // GPIO 2 (FastLED output)
 const int PIN_KNOB_1 = 26;         // ADC 26 (Speed / Scale)
 const int PIN_KNOB_2 = 27;         // ADC 27 (Color / Brightness)
 const int PIN_ROTARY_SW = 9;       // Rotary encoder button
@@ -320,9 +320,7 @@ void setup() {
   Serial.println("16x16 LED Matrix Visual Synth for SumaShield");
   Serial.println();
 
-  // Initialize NeoPixel
-  // Note: GPIO 6 is not populated in SumaShield v0.5
-  // This will work when NeoPixel support is added
+  // Initialize NeoPixel on GPIO 2
   FastLED.addLeds<LED_TYPE, NEOPIXEL_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
   FastLED.clear();
@@ -354,8 +352,7 @@ void setup() {
   last_activity_time = millis();
 
   Serial.println("PixelSynth initialized");
-  Serial.println("Note: NeoPixel (GPIO 6) not supported in SumaShield v0.5");
-  Serial.println("This firmware is ready for future hardware revisions.");
+  Serial.println("NeoPixel on GPIO 2");
   Serial.println();
 }
 

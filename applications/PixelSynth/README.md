@@ -8,7 +8,7 @@
 
 PixelSynth is a visual synthesizer that generates real-time animated patterns on a 16x16 LED matrix. Inspired by shader art and demoscene aesthetics, it creates organic, flowing visuals using procedural noise and mathematical functions.
 
-**⚠️ HARDWARE NOTE:** NeoPixel support (GPIO 6) is not available in SumaShield v0.5. This firmware is ready for future hardware revisions that include SK6812MINI-E RGB LEDs.
+**⚠️ HARDWARE NOTE:** NeoPixel output is on GPIO 2. This requires external LED matrix hardware connected to GPIO 2.
 
 ## Features
 
@@ -21,16 +21,16 @@ PixelSynth is a visual synthesizer that generates real-time animated patterns on
 
 ## Hardware Requirements
 
-**SumaShield Platform v0.6 or later** (required for NeoPixel support):
+**SumaShield Platform v0.5 or later:**
 - Raspberry Pi Pico / Pico 2
-- **NeoPixel SK6812MINI-E** on GPIO 6 (256 LEDs, 16x16 matrix)
+- **External LED matrix** connected to GPIO 2 (WS2812B/SK6812, 16x16 = 256 LEDs)
 - OLED SSD1306 (72x40)
 - Key Matrix (4x2 = 8 keys)
 - Rotary encoder
 - 2x Potentiometers
 - Button A
 
-**⚠️ SumaShield v0.5:** NeoPixel (GPIO 6) is not populated. This firmware will compile and run, but LEDs will not respond.
+**⚠️ External Hardware Required:** You must connect your own 16x16 LED matrix to GPIO 2. This is not included on the SumaShield PCB.
 
 ## Controls
 
@@ -116,8 +116,7 @@ PixelSynth v1.0.0
 16x16 LED Matrix Visual Synth for SumaShield
 
 PixelSynth initialized
-Note: NeoPixel (GPIO 6) not supported in SumaShield v0.5
-This firmware is ready for future hardware revisions.
+NeoPixel on GPIO 2
 ```
 
 **OLED Display:**
@@ -218,10 +217,8 @@ Rising flames with color gradients (red → orange → yellow). Simulates fire o
 
 ### LEDs Not Lighting Up
 
-**SumaShield v0.5:** GPIO 6 is not populated. Wait for v0.6 hardware revision.
-
-**SumaShield v0.6+:**
-1. Check solder joint on GPIO 6
+1. Check wiring from GPIO 2 to LED matrix data input
+2. Verify 5V power supply (needs 2-3A for full brightness)
 2. Verify 5V power supply (needs 2-3A for full brightness)
 3. Check ground connection
 4. Try reducing `BRIGHTNESS` to 50
@@ -248,9 +245,9 @@ Rising flames with color gradients (red → orange → yellow). Simulates fire o
 ## Technical Specifications
 
 **LED Matrix:**
-- Type: WS2812B / SK6812MINI-E
+- Type: WS2812B / SK6812MINI-E (user-provided)
 - Size: 16x16 = 256 pixels
-- Data Pin: GPIO 6
+- Data Pin: GPIO 2 (external connection)
 - Color Order: GRB (configurable)
 - Max Current: ~15A (theoretical, full white)
 - Typical Current: ~2-3A (colorful patterns)
@@ -268,7 +265,7 @@ Rising flames with color gradients (red → orange → yellow). Simulates fire o
 
 ## Known Limitations
 
-- **NeoPixel not in v0.5**: GPIO 6 not populated on current hardware
+- **External LED required**: 16x16 LED matrix must be connected to GPIO 2
 - **No USB MIDI**: Not implemented (visual-only synth)
 - **Single-core**: Uses Core 0 only (no audio output)
 - **Fixed matrix size**: Hardcoded for 16x16 (256 LEDs)
