@@ -58,6 +58,9 @@ The repository includes several firmware examples demonstrating different approa
 ### [SumaFormants](applications/SumaFormants/)
 Monophonic formant vocoder synth simulating human vowel sounds using three parallel resonant filters.
 
+### [PixelSynth](applications/PixelSynth/)
+16x16 LED matrix visual synth with 6 procedural animation modes. *(Requires NeoPixel GPIO 6 - not in v0.5)*
+
 ### [MIDITester](applications/MIDITester/)
 MIDI diagnostic tool for debugging USB and DIN MIDI reception issues.
 
