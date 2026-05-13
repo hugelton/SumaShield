@@ -218,6 +218,29 @@ void rotary_isr() {
   last_irq = millis();
 }
 
+// Rotary encoder button ISR (for hard drop in Tetris)
+void rotary_button_isr() {
+  static unsigned long last_irq = 0;
+
+  if (millis() - last_irq < 50) {  // 50ms debounce
+    return;
+  }
+
+  // Mode 6: Hard drop
+  if (currentMode == 6 && !tetris_game_over) {
+    // Drop until collision
+    while (isValidPosition(tetris_x, tetris_y + 1, tetris_rot, tetris_type)) {
+      tetris_y++;
+    }
+    // Lock piece
+    lockPiece();
+    clearLines();
+    spawnPiece();
+  }
+
+  last_irq = millis();
+}
+
 // OLED drawing
 void drawOLED() {
   unsigned long current_time = millis();
@@ -365,29 +388,195 @@ void drawFire(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
   }
 }
 
-// Mode 6: Tetris X (knob 1 controls X position)
-void drawTetrisX(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
+// Mode 6: Tetris (playable game)
+// This is a simple Tetris with rotary for X movement, click for hard drop
+void drawTetrisGame(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
   // Clear all LEDs first
   fill_solid(leds, NUM_LEDS, CRGB::Black);
 
-  // Draw 4x4 tetromino at tetris_x position
-  int8_t base_x = constrain(tetris_x + fineOffset, 0, 12);
-  int8_t base_y = 6;  // Center vertically
+  // Draw game board (locked pieces)
+  for (int y = 0; y < 16; y++) {
+    for (int x = 0; x < 16; x++) {
+      if (board[y][x] != 0) {
+        uint8_t hue = TETROMINO_COLORS[board[y][x] - 1];
+        leds[XY(x, y)] = CHSV(hue, 255, 200);
+      }
+    }
+  }
 
-  // Simple 2x2 block (O-piece)
-  for (int dy = 0; dy < 2; dy++) {
-    for (int dx = 0; dx < 2; dx++) {
-      int x = base_x + dx;
-      int y = base_y + dy;
-      if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
-        leds[XY(x, y)] = CHSV(colorOffset, 255, 255);
+  // Draw current falling piece
+  uint8_t hue = TETROMINO_COLORS[tetris_type];
+  for (int py = 0; py < 4; py++) {
+    for (int px = 0; px < 4; px++) {
+      if (TETROMINOES[tetris_type][py][px] == 1) {
+        int8_t draw_x = tetris_x + px;
+        int8_t draw_y = tetris_y + py;
+        if (draw_x >= 0 && draw_x < 16 && draw_y >= 0 && draw_y < 16) {
+          leds[XY(draw_x, draw_y)] = CHSV(hue, 255, 255);
+        }
+      }
+    }
+  }
+
+  // Draw score on top row (if space available)
+  if (tetris_score > 0) {
+    uint16_t score_digits = tetris_score;
+    int8_t digit_pos = 15;
+    while (score_digits > 0 && digit_pos >= 0) {
+      uint8_t digit = score_digits % 10;
+      if (digit > 0) {
+        leds[XY(digit_pos, 0)] = CHSV(0, 0, 150); // Blue for score
+      }
+      score_digits /= 10;
+      digit_pos--;
+    }
+  }
+}
+
+// ==========================================
+// --- Tetris Game Logic (Mode 6) ---
+// ==========================================
+
+// Initialize Tetris game
+void initTetris() {
+  // Clear board
+  for (int y = 0; y < 16; y++) {
+    for (int x = 0; x < 16; x++) {
+      board[y][x] = 0;
+    }
+  }
+  tetris_score = 0;
+  tetris_game_over = false;
+  tetris_x = 7;  // Center
+  tetris_y = 0;
+  tetris_rot = 0;
+  tetris_type = random(7);  // Random piece
+  tetris_drop_timer = 0;
+}
+
+// Check if current piece position is valid
+bool isValidPosition(int8_t x, int8_t y, int8_t rot, int8_t type) {
+  for (int py = 0; py < 4; py++) {
+    for (int px = 0; px < 4; px++) {
+      if (TETROMINOES[type][py][px] == 1) {
+        int8_t check_x = x + px;
+        int8_t check_y = y + py;
+        // Check bounds
+        if (check_x < 0 || check_x >= 16 || check_y < 0 || check_y >= 16) {
+          return false;
+        }
+        // Check collision with board
+        if (board[check_y][check_x] != 0) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// Lock current piece to board
+void lockPiece() {
+  for (int py = 0; py < 4; py++) {
+    for (int px = 0; px < 4; px++) {
+      if (TETROMINOES[tetris_type][py][px] == 1) {
+        int8_t lock_x = tetris_x + px;
+        int8_t lock_y = tetris_y + py;
+        if (lock_x >= 0 && lock_x < 16 && lock_y >= 0 && lock_y < 16) {
+          board[lock_y][lock_x] = tetris_type + 1;  // Store type + 1
+        }
       }
     }
   }
 }
 
-// Mode 7: Tetris Rotation (button A cycles rotation)
-void drawTetrisRot(uint8_t scale, uint8_t colorOffset, int8_t fineOffset) {
+// Check and clear complete lines
+void clearLines() {
+  uint8_t lines_cleared = 0;
+
+  for (int y = 15; y >= 0; y--) {
+    bool line_full = true;
+    for (int x = 0; x < 16; x++) {
+      if (board[y][x] == 0) {
+        line_full = false;
+        break;
+      }
+    }
+
+    if (line_full) {
+      // Clear this line and move everything down
+      for (int yy = y; yy > 0; yy--) {
+        for (int xx = 0; xx < 16; xx++) {
+          board[yy][xx] = board[yy - 1][xx];
+        }
+      }
+      // Clear top line
+      for (int xx = 0; xx < 16; xx++) {
+        board[0][xx] = 0;
+      }
+      lines_cleared++;
+      y++;  // Check this line again since we shifted down
+    }
+  }
+
+  if (lines_cleared > 0) {
+    tetris_score += lines_cleared * 100;
+    Serial.print("Lines cleared: ");
+    Serial.print(lines_cleared);
+    Serial.print(" Score: ");
+    Serial.println(tetris_score);
+  }
+}
+
+// Spawn new piece
+void spawnPiece() {
+  tetris_x = 7;
+  tetris_y = 0;
+  tetris_rot = 0;
+  tetris_type = random(7);
+
+  // Check if spawn position is valid (game over check)
+  if (!isValidPosition(tetris_x, tetris_y, tetris_rot, tetris_type)) {
+    tetris_game_over = true;
+    Serial.println("GAME OVER!");
+  }
+}
+
+// Update Tetris game (called every frame in mode 6)
+void updateTetrisGame() {
+  static bool first_run = true;
+  if (first_run) {
+    initTetris();
+    first_run = false;
+  }
+
+  if (tetris_game_over) {
+    // Flash game over pattern
+    fill_solid(leds, NUM_LEDS, CRGB::Red);
+    delay(100);
+    return;
+  }
+
+  // Auto-drop
+  tetris_drop_timer++;
+  if (tetris_drop_timer >= TETRIS_DROP_SPEED) {
+    tetris_drop_timer = 0;
+
+    // Try to move down
+    if (isValidPosition(tetris_x, tetris_y + 1, tetris_rot, tetris_type)) {
+      tetris_y++;
+    } else {
+      // Lock piece and spawn new one
+      lockPiece();
+      clearLines();
+      spawnPiece();
+    }
+  }
+}
+
+// ==========================================
+// --- PONG Game Logic (Mode 7) ---
+// ==========================================
   // Clear all LEDs first
   fill_solid(leds, NUM_LEDS, CRGB::Black);
 
@@ -452,6 +641,7 @@ void setup() {
   pinMode(PIN_ROTARY_CLK, INPUT_PULLUP);
   pinMode(PIN_ROTARY_DT, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_ROTARY_CLK), rotary_isr, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_ROTARY_SW), rotary_button_isr, FALLING);
 
   // Initialize button A
   pinMode(PIN_BTN_A, INPUT_PULLUP);
@@ -475,12 +665,21 @@ void setup() {
 
 void loop() {
   // 1. Read knobs
-  knob1Value = analogRead(PIN_KNOB_1);  // Speed / Scale / Tetris X
+  knob1Value = analogRead(PIN_KNOB_1);  // Speed / Scale (not used in Tetris)
   knob2Value = analogRead(PIN_KNOB_2);  // Color / Brightness
 
-  // Update tetris X position based on knob 1 (mode 6)
-  if (currentMode == 6) {
-    tetris_x = map(knob1Value, 0, 4095, 0, 15);
+  // Update Tetris controls (mode 6 only)
+  if (currentMode == 6 && !tetris_game_over) {
+    // Rotary controls X position
+    static int last_rotary_counter = 0;
+    if (rotary_counter != last_rotary_counter) {
+      // Try to move piece
+      int8_t new_x = tetris_x + (rotary_counter - last_rotary_counter);
+      if (isValidPosition(new_x, tetris_y, tetris_rot, tetris_type)) {
+        tetris_x = new_x;
+      }
+      last_rotary_counter = rotary_counter;
+    }
   }
 
   // 2. Scan key matrix for mode switching
@@ -541,12 +740,17 @@ void loop() {
       case 3: drawRipples(scaleVal, colorOffset, rotaryOffset); break;
       case 4: drawMatrixRain(scaleVal, colorOffset, rotaryOffset); break;
       case 5: drawFire(scaleVal, colorOffset, rotaryOffset); break;
-      case 6: drawTetrisX(scaleVal, colorOffset, rotaryOffset); break;
+      case 6: drawTetrisGame(scaleVal, colorOffset, rotaryOffset); break;
       case 7: drawTetrisRot(scaleVal, colorOffset, rotaryOffset); break;
     }
   } else {
     // Flash white effect
     fill_solid(leds, NUM_LEDS, CRGB::White);
+  }
+
+  // Update Tetris game state (only in mode 6)
+  if (currentMode == 6 && !flash_active) {
+    updateTetrisGame();
   }
 
   // 7. Update LED matrix
